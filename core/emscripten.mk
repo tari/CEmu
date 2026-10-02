@@ -1,4 +1,5 @@
 CC      = emcc
+AR      = emar
 
 # Add -g3 and disable some opts if needed
 CFLAGS  = -W -Wall -O3 -flto
@@ -18,16 +19,20 @@ CSOURCES := $(wildcard *.c) $(wildcard ./usb/*.c) ./debug/debug.c ./os/os-emscri
 OBJS = $(patsubst %.c, %.o, $(CSOURCES))
 
 OUTPUT := WebCEmu
+STATICLIB := libcemucore.a
+
+all: wasm $(STATICLIB)
 
 wasm:  $(OUTPUT).js
-
-all: wasm
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUTPUT).js: $(OBJS)
+$(OUTPUT).js: ./os/main-emscripten.o $(OBJS)
 	$(CC) $(CFLAGS) $(LFLAGS) $^ -o $@
+
+$(STATICLIB): $(OBJS)
+	$(AR) rcs $@ $?
 
 clean:
 	$(RM) -f $(OBJS) $(OUTPUT).js* $(OUTPUT).was*
